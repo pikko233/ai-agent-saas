@@ -1,95 +1,43 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
-  const { data: session } = authClient.useSession();
+  const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { data: session, isPending, error } = authClient.useSession();
 
-  const onSignUp = () => {
-    authClient.signUp.email(
-      {
-        email,
-        name,
-        password,
-      },
-      {
-        onSuccess: (ctx) => {
-          window.alert("操作成功～");
-        },
-        onError: (ctx) => {
-          window.alert("操作失败！");
-        },
-      },
-    );
-  };
-  const onSignIn = () => {
-    authClient.signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onSuccess: (ctx) => {
-          window.alert("操作成功～");
-        },
-        onError: (ctx) => {
-          window.alert("操作失败！");
-        },
-      },
-    );
-  };
+  useEffect(() => {
+    if (!isPending && (!session || error)) {
+      router.replace("/sign-in");
+    }
+  }, [isPending, session, error, router]);
 
-  if (session) {
-    return (
-      <div className="flex flex-col p-4 gap-6">
-        <p>{session.user.name}</p>
-        <Button onClick={() => authClient.signOut()}>退出登录</Button>
-      </div>
-    );
+  // Session 还在加载，暂时不要判断未登录
+  if (isPending) {
+    return <div className="p-4">加载中...</div>;
+  }
+
+  // 等待 useEffect 完成跳转，避免闪现原页面
+  if (!session || error) {
+    return null;
   }
 
   return (
     <div className="flex flex-col gap-6 p-4">
-      <div className="flex flex-col items-center gap-6 p-4 max-w-md mx-auto">
-        <Input
-          placeholder="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Input
-          placeholder="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          placeholder="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-        />
-        <Button onClick={onSignUp}>注册用户</Button>
-      </div>
-      <div className="flex flex-col items-center gap-6 p-4 max-w-md mx-auto">
-        <Input
-          placeholder="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          placeholder="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-        />
-        <Button onClick={onSignIn}>登录</Button>
-      </div>
+      <p>{session.user.name}</p>
+
+      <Button
+        onClick={async () => {
+          await authClient.signOut();
+          router.replace("/sign-in");
+        }}
+      >
+        退出登录
+      </Button>
     </div>
   );
 }
