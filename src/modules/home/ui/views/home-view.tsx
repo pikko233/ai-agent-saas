@@ -28,6 +28,10 @@ export const HomeView = () => {
                 setIsPending(false);
                 router.push("/sign-in");
               },
+              onError: ({ error }) => {
+                window.alert(error.message);
+                setIsPending(false);
+              },
             },
           });
         }}
