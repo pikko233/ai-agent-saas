@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 
 import { OctagonAlertIcon } from "lucide-react";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
@@ -21,7 +21,6 @@ const formSchema = z.object({
 });
 
 export const SignInView = () => {
-  const router = useRouter();
   const [error, setError] = useState<string | null>("");
   const [isPending, setIsPending] = useState(false);
 
@@ -33,19 +32,40 @@ export const SignInView = () => {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
     setError(null);
     setIsPending(true);
 
-    await authClient.signIn.email(
+    authClient.signIn.email(
       {
         email: data.email,
         password: data.password,
+        callbackURL: "/",
       },
       {
         onSuccess: () => {
           setIsPending(false);
-          router.push("/");
+        },
+        onError: ({ error }) => {
+          setIsPending(false);
+          setError(error.message);
+        },
+      },
+    );
+  };
+
+  const onSocial = (provider: "github" | "google") => {
+    setError(null);
+    setIsPending(true);
+
+    authClient.signIn.social(
+      {
+        provider,
+        callbackURL: "/",
+      },
+      {
+        onSuccess: () => {
+          setIsPending(false);
         },
         onError: ({ error }) => {
           setIsPending(false);
@@ -124,7 +144,9 @@ export const SignInView = () => {
                   type="button"
                   className="w-full"
                   disabled={isPending}
+                  onClick={() => onSocial("google")}
                 >
+                  <FaGoogle className="size-4 mr-1" />
                   Google
                 </Button>
                 <Button
@@ -132,7 +154,9 @@ export const SignInView = () => {
                   type="button"
                   className="w-full"
                   disabled={isPending}
+                  onClick={() => onSocial("github")}
                 >
+                  <FaGithub className="size-4 mr-1" />
                   Github
                 </Button>
               </div>
