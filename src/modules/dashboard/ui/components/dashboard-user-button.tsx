@@ -47,7 +47,7 @@ export const DashboardUserButton = () => {
 
   if (isMobile) {
     return (
-      <Drawer showSwipeHandle={isMobile} swipeDirection="down">
+      <Drawer>
         <DrawerTrigger className="rounded-lg border border-border/10 p-3 w-full flex items-center justify-between bg-white/5 hover:bg-white/10 overflow-hidden cursor-pointer">
           {data.user.name && (
             <GeneratedAvatar
