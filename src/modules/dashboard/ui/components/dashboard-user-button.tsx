@@ -102,7 +102,9 @@ export const DashboardUserButton = () => {
         <DropdownMenuGroup>
           <DropdownMenuLabel>
             <div className="flex flex-col gap-1">
-              <span className="font-medium truncate">{data.user.name}</span>
+              <span className="text-sm text-black/80 font-medium truncate">
+                {data.user.name}
+              </span>
               <span className="text-xs font-normal text-muted-foreground">
                 {data.user.email}
               </span>
