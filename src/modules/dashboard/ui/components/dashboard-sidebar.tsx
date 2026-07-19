@@ -7,7 +7,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -18,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { BotIcon, StarIcon, VideoIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { DashboardUserButton } from "./dashboard-user-button";
 
 const firstSection = [
@@ -44,6 +43,7 @@ const secondSection = [
 
 export const DashboardSidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <Sidebar>
@@ -69,18 +69,17 @@ export const DashboardSidebar = () => {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     className={cn(
-                      "h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
+                      "flex items-center gap-2 h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
                       pathname === item.href &&
                         "bg-linear-to-r/oklch border-[#5D6B68]/10",
                     )}
                     isActive={pathname === item.href}
+                    onClick={() => router.push(item.href)}
                   >
-                    <Link href={item.href} className="flex items-center gap-2">
-                      <item.icon className="size-5" />
-                      <span className="text-sm font-medium tracking-tight">
-                        {item.label}
-                      </span>
-                    </Link>
+                    <item.icon className="size-5" />
+                    <span className="text-sm font-medium tracking-tight">
+                      {item.label}
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -100,18 +99,17 @@ export const DashboardSidebar = () => {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     className={cn(
-                      "h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
+                      "flex items-center gap-2 h-10 hover:bg-linear-to-r/oklch border border-transparent hover:border-[#5D6B68]/10 from-sidebar-accent from-5% via-30% via-sidebar/50 to-sidebar/50",
                       pathname === item.href &&
                         "bg-linear-to-r/oklch border-[#5D6B68]/10",
                     )}
                     isActive={pathname === item.href}
+                    onClick={() => router.push(item.href)}
                   >
-                    <Link href={item.href} className="flex items-center gap-2">
-                      <item.icon className="size-5" />
-                      <span className="text-sm font-medium tracking-tight">
-                        {item.label}
-                      </span>
-                    </Link>
+                    <item.icon className="size-5" />
+                    <span className="text-sm font-medium tracking-tight">
+                      {item.label}
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
