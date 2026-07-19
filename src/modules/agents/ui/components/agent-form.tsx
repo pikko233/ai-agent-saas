@@ -1,7 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import { agentGetOne } from "../../types";
+import { AgentGetOne } from "../../types";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 interface AgentFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
-  initialValues?: agentGetOne;
+  initialValues?: AgentGetOne;
 }
 
 export const AgentForm = ({

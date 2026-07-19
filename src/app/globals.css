@@ -133,3 +133,9 @@
     @apply font-sans;
   }
 }
+
+@layer base {
+  button:not(disabled) {
+    cursor: pointer;
+  }
+}
