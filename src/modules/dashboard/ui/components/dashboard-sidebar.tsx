@@ -23,12 +23,12 @@ import { DashboardUserButton } from "./dashboard-user-button";
 const firstSection = [
   {
     icon: VideoIcon,
-    label: "Meetings",
+    label: "会议",
     href: "/meetings",
   },
   {
     icon: BotIcon,
-    label: "Agents",
+    label: "智能体",
     href: "/agents",
   },
 ];
@@ -36,7 +36,7 @@ const firstSection = [
 const secondSection = [
   {
     icon: StarIcon,
-    label: "Upgrade",
+    label: "订阅",
     href: "/upgrade",
   },
 ];
