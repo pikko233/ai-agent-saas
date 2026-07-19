@@ -38,6 +38,24 @@ export const AgentForm = ({
           trpc.agents.getMany.queryOptions({}),
         );
 
+        // TODO: 免费套餐限制智能体创建数量
+
+        onSuccess?.();
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    }),
+  );
+
+  const updateAgent = useMutation(
+    trpc.agents.update.mutationOptions({
+      onSuccess: async () => {
+        // 更新智能体列表信息
+        await queryClient.invalidateQueries(
+          trpc.agents.getMany.queryOptions({}),
+        );
+
         // 如果是编辑的话，还需要更新当前的智能体详情信息
         if (initialValues?.id) {
           await queryClient.invalidateQueries(
@@ -62,11 +80,11 @@ export const AgentForm = ({
   });
 
   const isEdit = !!initialValues?.id;
-  const isPending = createAgent.isPending;
+  const isPending = createAgent.isPending || updateAgent.isPending;
 
   const onSubmit = (values: z.infer<typeof agentsInsertSchema>) => {
     if (isEdit) {
-      console.log("TODO: edit agent");
+      updateAgent.mutate({ ...values, id: initialValues.id });
     } else {
       createAgent.mutate(values);
     }
@@ -106,7 +124,7 @@ export const AgentForm = ({
           </Field>
         )}
       />
-      <div className="flex items-center justify-end gap-x-2">
+      <div className="flex items-center justify-between gap-x-2">
         {onCancel && (
           <Button
             variant="ghost"
@@ -118,7 +136,7 @@ export const AgentForm = ({
           </Button>
         )}
         <Button type="submit" disabled={isPending}>
-          保存
+          {isEdit ? "更新" : "创建"}
         </Button>
       </div>
     </form>

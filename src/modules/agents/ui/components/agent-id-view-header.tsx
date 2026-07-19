@@ -60,10 +60,10 @@ export const AgentIdViewHeader = ({
         </BreadcrumbList>
       </Breadcrumb>
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Button variant="ghost">
-            <MoreVerticalIcon />
-          </Button>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" aria-label="更多操作" />}
+        >
+          <MoreVerticalIcon />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
