@@ -45,10 +45,7 @@ function CommandResponsiveDialog({
   className,
   showCloseButton = false,
   ...props
-}: Omit<
-  React.ComponentProps<typeof Dialog>,
-  "children" | "onOpenChange"
-> & {
+}: Omit<React.ComponentProps<typeof Dialog>, "children" | "onOpenChange"> & {
   title?: string;
   description?: string;
   className?: string;
@@ -61,7 +58,10 @@ function CommandResponsiveDialog({
   if (isMobile) {
     return (
       <Drawer {...props}>
-        <DrawerContent className={cn("overflow-hidden p-0", className)}>
+        <DrawerContent
+          className={cn("overflow-hidden p-0", className)}
+          forceRenderBackdrop
+        >
           <DrawerHeader className="sr-only">
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription>{description}</DrawerDescription>
@@ -79,6 +79,7 @@ function CommandResponsiveDialog({
           "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
           className,
         )}
+        forceRenderBackdrop
         showCloseButton={showCloseButton}
       >
         <DialogHeader className="sr-only">
