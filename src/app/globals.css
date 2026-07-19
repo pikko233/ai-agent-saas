@@ -135,7 +135,7 @@
 }
 
 @layer base {
-  button:not(disabled) {
+  button:not(:disabled) {
     cursor: pointer;
   }
 }
