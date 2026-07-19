@@ -34,7 +34,9 @@ export const AgentForm = ({
     trpc.agents.create.mutationOptions({
       onSuccess: async () => {
         // 更新智能体列表信息
-        await queryClient.invalidateQueries(trpc.agents.getMany.queryOptions());
+        await queryClient.invalidateQueries(
+          trpc.agents.getMany.queryOptions({}),
+        );
 
         // 如果是编辑的话，还需要更新当前的智能体详情信息
         if (initialValues?.id) {
