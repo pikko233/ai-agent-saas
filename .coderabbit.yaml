@@ -5,10 +5,8 @@ reviews:
   high_level_summary: true
   poem: true
   review_status: true
-  review_details: true
-  sequence_diagrams: true
-  changed_files_summary: true
-  estimate_code_review_effort: true
+  review_details: false
+
   auto_review:
     enabled: true
     drafts: false

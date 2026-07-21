@@ -53,6 +53,8 @@ export const MeetingForm = ({
           trpc.meetings.getMany.queryOptions({}),
         );
 
+        toast.success("创建成功～");
+
         onSuccess?.(data.id);
       },
       onError: (error) => {
@@ -64,17 +66,18 @@ export const MeetingForm = ({
   const updateMeeting = useMutation(
     trpc.meetings.update.mutationOptions({
       onSuccess: async (data) => {
-        // 更新智能体列表信息
         await queryClient.invalidateQueries(
           trpc.meetings.getMany.queryOptions({}),
         );
 
-        // 如果是编辑的话，还需要更新当前的智能体详情信息
         if (initialValues?.id) {
           await queryClient.invalidateQueries(
             trpc.meetings.getOne.queryOptions({ id: initialValues.id }),
           );
+          toast.dismiss(initialValues.id);
         }
+
+        toast.success("更新成功～");
 
         onSuccess?.(data.id);
       },
@@ -97,6 +100,7 @@ export const MeetingForm = ({
 
   const onSubmit = (values: z.infer<typeof meetingsInsertSchema>) => {
     if (isEdit) {
+      toast.loading("正在更新中...", { id: initialValues.id });
       updateMeeting.mutate({ ...values, id: initialValues.id });
     } else {
       createMeeting.mutate(values);
