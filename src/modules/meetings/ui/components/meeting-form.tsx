@@ -1,12 +1,7 @@
 "use client";
 
 import { useTRPC } from "@/trpc/client";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { meetingsInsertSchema } from "../../schemas";
@@ -22,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { MeetingGetOne } from "../../types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CommandSelect } from "@/components/command-select";
 import { NewAgentDialog } from "@/modules/agents/ui/components/new-agent-dialog";
 
@@ -42,23 +37,13 @@ export const MeetingForm = ({
 
   const [openNewAgentDialog, setOpenNewAgentDialog] = useState(false);
   const [agentSearch, setAgentSearch] = useState("");
-  const [debouncedAgentSearch, setDebouncedAgentSearch] = useState("");
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedAgentSearch(agentSearch);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [agentSearch]);
-
-  const agents = useQuery({
-    ...trpc.agents.getMany.queryOptions({
+  const agents = useQuery(
+    trpc.agents.getMany.queryOptions({
       pageSize: 100,
-      search: debouncedAgentSearch,
+      search: agentSearch,
     }),
-    placeholderData: keepPreviousData,
-  });
+  );
 
   const createMeeting = useMutation(
     trpc.meetings.create.mutationOptions({

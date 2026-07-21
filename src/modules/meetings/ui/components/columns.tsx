@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 import { ColumnDef } from "@tanstack/react-table";
-import { MeetingGetMany } from "../../types";
+import { MeetingGetMany, statusLabelMap } from "../../types";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import {
   CircleCheckIcon,
@@ -29,18 +29,10 @@ function formatDuration(seconds: number) {
 
 const statusIconMap = {
   upcoming: ClockArrowUpIcon,
-  active: LoaderIcon,
+  active: VideoIcon,
   completed: CircleCheckIcon,
   processing: LoaderIcon,
   cancelled: CircleXIcon,
-};
-
-const statusLabelMap = {
-  upcoming: "即将开始",
-  active: "进行中",
-  completed: "已完成",
-  processing: "处理中",
-  cancelled: "已取消",
 };
 
 const statusColorMap = {
@@ -58,16 +50,6 @@ export const columns: ColumnDef<MeetingGetMany[number]>[] = [
     cell: ({ row }) => (
       <div className="flex flex-col gap-y-1">
         <span className="font-semibold capitalize">{row.original.name}</span>
-        {/* <div className="flex items-center gap-x-2">
-          <GeneratedAvatar
-            variant="botttsNeutral"
-            seed={row.original.agent.name}
-            className="size-6"
-          />
-          <span className="font-semibold capitalize">
-            {row.original.agent.name}
-          </span>
-        </div> */}
         <div className="flex items-center gap-x-2">
           <div className="flex items-center gap-x-1">
             <CornerDownRightIcon className="size-3 text-muted-foreground" />
