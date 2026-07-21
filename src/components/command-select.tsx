@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,23 @@ export const CommandSelect = ({
   const [open, setOpen] = useState(false);
   const selectedOption = options.find((option) => option.value === value);
 
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleOpenChange = (open: boolean) => {
+    // 每次打开搜索弹窗，重置搜索结果
+    onSearch?.("");
+    setOpen(open);
+  };
+
+  // 搜索防抖
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch?.(searchValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchValue, onSearch]);
+
   return (
     <>
       <Button
@@ -55,10 +72,13 @@ export const CommandSelect = ({
         <div>{selectedOption?.id ? selectedOption.children : placeholder}</div>
         <ChevronsUpDownIcon />
       </Button>
-      <CommandResponsiveDialog open={open} onOpenChange={setOpen}>
-        <Command shouldFilter={true}>
+      <CommandResponsiveDialog open={open} onOpenChange={handleOpenChange}>
+        <Command shouldFilter={!onSearch}>
           {isSearchable && (
-            <CommandInput placeholder={placeholder} onValueChange={onSearch} />
+            <CommandInput
+              placeholder={placeholder}
+              onValueChange={setSearchValue}
+            />
           )}
           <CommandList>
             <CommandEmpty>
