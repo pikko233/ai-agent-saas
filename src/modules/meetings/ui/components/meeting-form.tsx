@@ -82,6 +82,7 @@ export const MeetingForm = ({
         onSuccess?.(data.id);
       },
       onError: (error) => {
+        toast.dismiss(initialValues?.id);
         toast.error(error.message);
       },
     }),

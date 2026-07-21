@@ -12,6 +12,11 @@ import { toast } from "sonner";
 import { useConfirm } from "@/hooks/use-confirm";
 import { UpdateMeetingDialog } from "../components/update-meeting-dialog";
 import { useState } from "react";
+import { MeetingStatus, statusLabelMap } from "../../types";
+import { UpcomingState } from "@/components/upcoming-state";
+import { ActiveState } from "@/components/active-state";
+import { CancelledState } from "@/components/cancelled-state";
+import { ProcessingState } from "@/components/processing-state";
 
 interface Props {
   meetingId: string;
@@ -33,10 +38,10 @@ export const MeetingIdView = ({ meetingId }: Props) => {
         queryClient.invalidateQueries(trpc.meetings.getMany.queryOptions({}));
         toast.dismiss(meetingId);
         toast.success("删除成功~");
-
         router.push("/meetings");
       },
       onError: (error) => {
+        toast.dismiss(meetingId);
         toast.error(error.message);
       },
     }),
@@ -56,6 +61,12 @@ export const MeetingIdView = ({ meetingId }: Props) => {
     removeMeeting.mutate({ id: meetingId });
   };
 
+  const isUpcoming = meeting.status === MeetingStatus.Upcoming;
+  const isActive = meeting.status === MeetingStatus.Active;
+  const isCompleted = meeting.status === MeetingStatus.Completed;
+  const isProcessing = meeting.status === MeetingStatus.Processing;
+  const isCancelled = meeting.status === MeetingStatus.Cancelled;
+
   return (
     <>
       <RemoveMeetingDialog />
@@ -71,7 +82,17 @@ export const MeetingIdView = ({ meetingId }: Props) => {
           onEdit={() => setUpdateMeetingDialogOpen(true)}
           onRemove={handleRemoveMeeting}
         />
-        <div>{JSON.stringify(meeting)}</div>
+        {isUpcoming && (
+          <UpcomingState
+            meetingId={meetingId}
+            onCancelMeeting={() => {}}
+            isCancelling={meeting.status === MeetingStatus.Cancelled}
+          />
+        )}
+        {isActive && <ActiveState meetingId={meetingId} />}
+        {isCancelled && <CancelledState />}
+        {isProcessing && <ProcessingState />}
+        {isCompleted && <div>会议已结束</div>}
       </div>
     </>
   );
