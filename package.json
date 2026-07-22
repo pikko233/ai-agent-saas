@@ -18,6 +18,8 @@
     "@hookform/resolvers": "^5.4.0",
     "@neondatabase/serverless": "^1.1.0",
     "@shadcn/react": "^0.2.1",
+    "@stream-io/node-sdk": "^0.7.62",
+    "@stream-io/video-react-sdk": "^1.39.3",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-table": "^8.21.3",
     "@trpc/client": "^11.18.0",

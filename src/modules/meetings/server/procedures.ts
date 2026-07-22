@@ -12,8 +12,73 @@ import {
 import { TRPCError } from "@trpc/server";
 import { meetingsInsertSchema, meetingsUpdateSchema } from "../schemas";
 import { MeetingStatus } from "../types";
+import { streamVideo } from "@/lib/stream-video";
+import { generatedAvatarUri } from "@/lib/avatar";
 
 export const meetingsRouter = createTRPCRouter({
+  generateToken: protectedProcedure
+    .input(z.object({ meetingId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { user } = ctx.auth;
+
+      const [existingMeeting] = await db
+        .select({ id: meetings.id, name: meetings.name })
+        .from(meetings)
+        .where(
+          and(eq(meetings.id, input.meetingId), eq(meetings.userId, user.id)),
+        );
+
+      if (!existingMeeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "未查询到对应ID的会议",
+        });
+      }
+
+      await streamVideo.upsertUsers([
+        {
+          id: user.id,
+          name: user.name,
+          role: "admin",
+          image:
+            user.image ??
+            generatedAvatarUri({ seed: user.name, variant: "initials" }),
+        },
+      ]);
+
+      const call = streamVideo.video.call("default", existingMeeting.id);
+      await call.getOrCreate({
+        data: {
+          created_by_id: user.id,
+          custom: {
+            meetingId: existingMeeting.id,
+            meetingName: existingMeeting.name,
+          },
+          settings_override: {
+            transcription: {
+              language: "zh",
+              mode: "auto-on",
+              closed_caption_mode: "auto-on",
+            },
+            recording: {
+              mode: "auto-on",
+              quality: "1080p",
+            },
+          },
+        },
+      });
+
+      const expirationTime = Math.floor(Date.now() / 1000) + 3600; // 1小时后过期
+      const issuedAt = Math.floor(Date.now() / 1000) - 60; // token签发时间设为一分钟前，防止用户客户端时间比服务器时间早，从而导致token签发时间未到而无效
+
+      const token = streamVideo.generateUserToken({
+        user_id: user.id,
+        exp: expirationTime,
+        iat: issuedAt,
+      });
+
+      return token;
+    }),
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -64,7 +129,52 @@ export const meetingsRouter = createTRPCRouter({
         })
         .returning();
 
-      // TODO: 视频流
+      const call = streamVideo.video.call("default", createdMeeting.id);
+
+      await call.create({
+        data: {
+          created_by_id: ctx.auth.user.id,
+          custom: {
+            meetingId: createdMeeting.id,
+            meetingName: createdMeeting.name,
+          },
+          settings_override: {
+            transcription: {
+              language: "zh",
+              mode: "auto-on",
+              closed_caption_mode: "auto-on",
+            },
+            recording: {
+              mode: "auto-on",
+              quality: "1080p",
+            },
+          },
+        },
+      });
+
+      const [existingAgent] = await db
+        .select()
+        .from(agents)
+        .where(eq(agents.id, createdMeeting.agentId));
+
+      if (!existingAgent) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "未找到对应ID的智能体",
+        });
+      }
+
+      await streamVideo.upsertUsers([
+        {
+          id: existingAgent.id,
+          name: existingAgent.name,
+          role: "user",
+          image: generatedAvatarUri({
+            seed: existingAgent.name,
+            variant: "botttsNeutral",
+          }),
+        },
+      ]);
 
       return createdMeeting;
     }),
