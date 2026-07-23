@@ -16,69 +16,31 @@ import { streamVideo } from "@/lib/stream-video";
 import { generatedAvatarUri } from "@/lib/avatar";
 
 export const meetingsRouter = createTRPCRouter({
-  generateToken: protectedProcedure
-    .input(z.object({ meetingId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const { user } = ctx.auth;
+  generateToken: protectedProcedure.mutation(async ({ ctx }) => {
+    const { user } = ctx.auth;
 
-      const [existingMeeting] = await db
-        .select({ id: meetings.id, name: meetings.name })
-        .from(meetings)
-        .where(
-          and(eq(meetings.id, input.meetingId), eq(meetings.userId, user.id)),
-        );
+    await streamVideo.upsertUsers([
+      {
+        id: user.id,
+        name: user.name,
+        role: "admin",
+        image:
+          user.image ??
+          generatedAvatarUri({ seed: user.name, variant: "initials" }),
+      },
+    ]);
 
-      if (!existingMeeting) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "未查询到对应ID的会议",
-        });
-      }
+    const expirationTime = Math.floor(Date.now() / 1000) + 3600; // 1小时后过期
+    const issuedAt = Math.floor(Date.now() / 1000) - 60; // token签发时间设为一分钟前，防止用户客户端时间比服务器时间早，从而导致token签发时间未到而无效
 
-      await streamVideo.upsertUsers([
-        {
-          id: user.id,
-          name: user.name,
-          role: "admin",
-          image:
-            user.image ??
-            generatedAvatarUri({ seed: user.name, variant: "initials" }),
-        },
-      ]);
+    const token = streamVideo.generateUserToken({
+      user_id: user.id,
+      exp: expirationTime,
+      iat: issuedAt,
+    });
 
-      const call = streamVideo.video.call("default", existingMeeting.id);
-      await call.getOrCreate({
-        data: {
-          created_by_id: user.id,
-          custom: {
-            meetingId: existingMeeting.id,
-            meetingName: existingMeeting.name,
-          },
-          settings_override: {
-            transcription: {
-              language: "zh",
-              mode: "auto-on",
-              closed_caption_mode: "auto-on",
-            },
-            recording: {
-              mode: "auto-on",
-              quality: "1080p",
-            },
-          },
-        },
-      });
-
-      const expirationTime = Math.floor(Date.now() / 1000) + 3600; // 1小时后过期
-      const issuedAt = Math.floor(Date.now() / 1000) - 60; // token签发时间设为一分钟前，防止用户客户端时间比服务器时间早，从而导致token签发时间未到而无效
-
-      const token = streamVideo.generateUserToken({
-        user_id: user.id,
-        exp: expirationTime,
-        iat: issuedAt,
-      });
-
-      return token;
-    }),
+    return token;
+  }),
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
