@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 项目状态
+
+本项目原计划实现一个基于 GetStream Video 和 OpenAI Realtime API 的 AI
+会议应用。目前项目暂时中止开发，主要原因是 GetStream 的
+`connect_agent` 服务持续返回 `code 42`，导致 AI Agent 加入会议后立即退出。
+
+排查过程中已经确认 Stream Video Webhook 能够正常触发，OpenAI API Key
+也可以直接连接 Realtime API；更换多个 Stream SDK 版本、Realtime
+模型及本地隧道后问题仍然存在，因此现阶段判断为 GetStream 服务端代理与
+OpenAI Realtime API 的兼容性或服务配置问题，无法仅通过修改本项目代码解决。
+
+仓库暂时保留当前实现和排查代码，等待 GetStream 官方修复或提供明确的迁移方案后再考虑继续开发。
+
 ## Getting Started
 
 First, run the development server:
