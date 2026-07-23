@@ -1,37 +1,65 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## 项目状态
+## AI Agent 架构
 
-本项目原计划实现一个基于 GetStream Video 和 OpenAI Realtime API 的 AI
-会议应用。目前项目暂时中止开发，主要原因是 GetStream 的
-`connect_agent` 服务持续返回 `code 42`，导致 AI Agent 加入会议后立即退出。
-
-排查过程中已经确认 Stream Video Webhook 能够正常触发，OpenAI API Key
-也可以直接连接 Realtime API；更换多个 Stream SDK 版本、Realtime
-模型及本地隧道后问题仍然存在，因此现阶段判断为 GetStream 服务端代理与
-OpenAI Realtime API 的兼容性或服务配置问题，无法仅通过修改本项目代码解决。
-
-仓库暂时保留当前实现和排查代码，等待 GetStream 官方修复或提供明确的迁移方案后再考虑继续开发。
+项目曾使用 GetStream Node SDK 的 `connectOpenAi` 服务端代理，但该接口持续
+返回 `code 42`，导致 Agent 加入会议后立即退出。当前实现改用
+[Vision Agents](https://visionagents.ai/)：Next.js 继续负责页面、会议和
+Webhook，独立的 Python worker 直接连接 Stream Video 与 xAI Grok Realtime。
 
 ## Getting Started
 
-First, run the development server:
+安装 Node.js 和 Agent worker 依赖：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cd agent-worker && uv sync && cd ..
+```
+
+根目录 `.env` 至少需要以下配置：
+
+```dotenv
+NEXT_PUBLIC_STREAM_VIDEO_API_KEY=
+STREAM_VIDEO_SECRET_KEY=
+XAI_API_KEY=
+OPENAI_API_KEY=
+
+# 可选
+AGENT_WORKER_URL=http://127.0.0.1:8787
+AGENT_WORKER_SECRET=
+AGENT_REALTIME_PROVIDER=xai
+XAI_REALTIME_MODEL=grok-voice-think-fast-1.0
+XAI_REALTIME_VOICE=eve
+OPENAI_REALTIME_MODEL=gpt-realtime-1.5
+OPENAI_REALTIME_VOICE=shimmer
+AGENT_VOICE_STYLE=Use a bright, youthful, cheerful, and cute feminine speaking style.
+AGENT_MAX_IDLE_SECONDS=60
+AGENT_AUDIO_JITTER_BUFFER_MS=100
+```
+
+将 `AGENT_REALTIME_PROVIDER` 设置为 `xai` 或 `openai` 即可切换实时语音
+提供商；修改环境变量后需要重启 Agent worker。
+
+只重启 Agent worker（自动停止占用 8787 端口的旧进程）：
+
+```bash
+npm run restart:agent
+```
+
+同时启动 Next.js、ngrok 和 Vision Agent worker：
+
+```bash
+npm run dev:all
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Worker 健康检查地址为 `http://127.0.0.1:8787/health`，配置检查地址为
+`http://127.0.0.1:8787/ready`。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+部署时需要单独运行 `agent-worker/Dockerfile`，并将 Next.js 的
+`AGENT_WORKER_URL` 指向 worker 的内网或 HTTPS 地址。若 worker 暴露在本机以外，
+必须在两端设置相同的 `AGENT_WORKER_SECRET`。
 
 ## Learn More
 

@@ -1,12 +1,47 @@
 import { db } from "@/db";
 import { agents, meetings } from "@/db/schema";
 import { streamVideo } from "@/lib/stream-video";
-import {
-  CallSessionParticipantLeftEvent,
-  CallSessionStartedEvent,
-} from "@stream-io/node-sdk";
-import { and, eq } from "drizzle-orm";
+import { CallSessionStartedEvent } from "@stream-io/node-sdk";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+
+const agentWorkerUrl =
+  process.env.AGENT_WORKER_URL ?? "http://127.0.0.1:8787";
+
+async function startVisionAgent(input: {
+  callId: string;
+  agentId: string;
+  agentName: string;
+  instructions: string;
+}) {
+  const headers: HeadersInit = {
+    "content-type": "application/json",
+  };
+
+  if (process.env.AGENT_WORKER_SECRET) {
+    headers["x-agent-worker-secret"] = process.env.AGENT_WORKER_SECRET;
+  }
+
+  const response = await fetch(`${agentWorkerUrl}/join`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      call_id: input.callId,
+      call_type: "default",
+      agent_id: input.agentId,
+      agent_name: input.agentName,
+      instructions: input.instructions,
+    }),
+    signal: AbortSignal.timeout(4_000),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `Vision Agent worker returned ${response.status}: ${errorBody.slice(0, 300)}`,
+    );
+  }
+}
 
 // getstream.io 视频流SDK的webhook 当call创建之后将对应的meeting会议状态改为active
 export async function POST(req: NextRequest) {
@@ -57,19 +92,28 @@ export async function POST(req: NextRequest) {
     const [existingMeeting] = await db
       .select()
       .from(meetings)
-      .where(and(eq(meetings.id, meetingId), eq(meetings.status, "upcoming")));
+      .where(eq(meetings.id, meetingId));
 
     if (!existingMeeting) {
       return NextResponse.json({ error: "会议不存在" }, { status: 404 });
     }
 
-    await db
-      .update(meetings)
-      .set({
-        status: "active",
-        startedAt: new Date(),
-      })
-      .where(eq(meetings.id, existingMeeting.id));
+    if (
+      existingMeeting.status === "completed" ||
+      existingMeeting.status === "cancelled"
+    ) {
+      return NextResponse.json({ status: "ignored" });
+    }
+
+    if (existingMeeting.status === "upcoming") {
+      await db
+        .update(meetings)
+        .set({
+          status: "active",
+          startedAt: new Date(),
+        })
+        .where(eq(meetings.id, existingMeeting.id));
+    }
 
     const [existingAgent] = await db
       .select()
@@ -83,28 +127,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const call = streamVideo.video.call("default", meetingId);
-
-    const realtimeClient = await streamVideo.video.connectOpenAi({
-      call,
-      openAiApiKey: process.env.OPENAI_API_KEY!,
-      agentUserId: existingAgent.id,
-    });
-
-    realtimeClient.updateSession({
-      instructions: existingAgent.instructions,
-    });
-  } else if (eventType === "call.session_participant_left") {
-    // 如果有人离开会议，那么就结束通话
-    const event = payload as CallSessionParticipantLeftEvent;
-    const meetingId = event.call_cid.split(":")[1]; // call_cid的格式是"type:id"
-
-    if (!meetingId) {
-      return NextResponse.json({ error: "缺少会议ID参数" }, { status: 400 });
+    try {
+      await startVisionAgent({
+        callId: meetingId,
+        agentId: existingAgent.id,
+        agentName: existingAgent.name,
+        instructions: existingAgent.instructions,
+      });
+    } catch (error) {
+      console.error("[Vision Agent] 启动失败", error);
+      return NextResponse.json(
+        { error: "Vision Agent worker 启动失败" },
+        { status: 503 },
+      );
     }
-
-    const call = streamVideo.video.call("default", meetingId);
-    await call.end();
   }
 
   return NextResponse.json({ status: "ok" });

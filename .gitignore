@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+/agent-worker/.venv
+/agent-worker/__pycache__
+*.py[cod]
 /.pnp
 .pnp.*
 .yarn/*

@@ -118,6 +118,7 @@ export const AgentForm = ({
               id="instructions"
               placeholder="请输入角色设定，例如：你是一位聪明有耐心的数学老师……"
               rows={2}
+              className="max-h-40"
               {...field}
             />
             {fieldState.error && <FieldError errors={[fieldState.error]} />}
