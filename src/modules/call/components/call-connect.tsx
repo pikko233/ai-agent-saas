@@ -44,7 +44,7 @@ export const CallConnect = ({
         name: userName,
         image: userImage,
       },
-      tokenProvider: () => generateToken({ meetingId }),
+      tokenProvider: generateToken,
     });
 
     setClient(_client);
