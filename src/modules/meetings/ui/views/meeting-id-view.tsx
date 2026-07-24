@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/hooks/use-confirm";
 import { UpdateMeetingDialog } from "../components/update-meeting-dialog";
 import { useState } from "react";
-import { MeetingStatus, statusLabelMap } from "../../types";
+import { MeetingStatus, MeetingStatusLabelMap } from "../../types";
 import { UpcomingState } from "@/components/upcoming-state";
 import { ActiveState } from "@/components/active-state";
 import { CancelledState } from "@/components/cancelled-state";

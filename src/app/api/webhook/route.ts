@@ -1,12 +1,18 @@
 import { db } from "@/db";
 import { agents, meetings } from "@/db/schema";
+import { inngest } from "@/inngest/client";
 import { streamVideo } from "@/lib/stream-video";
-import { CallSessionStartedEvent } from "@stream-io/node-sdk";
-import { eq } from "drizzle-orm";
+import {
+  CallRecordingReadyEvent,
+  CallSessionEndedEvent,
+  CallSessionParticipantLeftEvent,
+  CallSessionStartedEvent,
+  CallTranscriptionReadyEvent,
+} from "@stream-io/node-sdk";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-const agentWorkerUrl =
-  process.env.AGENT_WORKER_URL ?? "http://127.0.0.1:8787";
+const agentWorkerUrl = process.env.AGENT_WORKER_URL ?? "http://127.0.0.1:8787";
 
 async function startVisionAgent(input: {
   callId: string;
@@ -102,10 +108,14 @@ export async function POST(req: NextRequest) {
       existingMeeting.status === "completed" ||
       existingMeeting.status === "cancelled"
     ) {
-      return NextResponse.json({ status: "ignored" });
+      return NextResponse.json(
+        { error: "会议已结束或已取消" },
+        { status: 404 },
+      );
     }
 
     if (existingMeeting.status === "upcoming") {
+      // 当会议状态为“等待开始”时，将其改为"active"进行中
       await db
         .update(meetings)
         .set({
@@ -140,6 +150,82 @@ export async function POST(req: NextRequest) {
         { error: "Vision Agent worker 启动失败" },
         { status: 503 },
       );
+    }
+  } else if (eventType === "call.session_participant_left") {
+    // 当有人离开通话（用户或者agent）
+    const event = payload as CallSessionParticipantLeftEvent;
+    const meetingId = event.call_cid.split(":")[1]; // call_cid的格式为"type:id"
+
+    if (!meetingId) {
+      return NextResponse.json({ error: "缺少会议ID参数" }, { status: 400 });
+    }
+
+    const call = streamVideo.video.call("default", meetingId);
+    await call.end();
+  } else if (eventType === "call.session_ended") {
+    // 当通话结束
+    const event = payload as CallSessionEndedEvent;
+    const meetingId = event.call.custom?.meetingId;
+
+    if (!meetingId) {
+      return NextResponse.json({ error: "缺少会议ID参数" }, { status: 400 });
+    }
+
+    await db
+      .update(meetings)
+      .set({
+        status: "processing",
+        endedAt: new Date(),
+      })
+      .where(and(eq(meetings.id, meetingId), eq(meetings.status, "active")));
+  } else if (eventType === "call.transcription_ready") {
+    // 当通话文字转写记录已经准备好时
+    const event = payload as CallTranscriptionReadyEvent;
+    const meetingId = event.call_cid.split(":")[1];
+
+    if (!meetingId) {
+      return NextResponse.json({ error: "缺少会议ID参数" }, { status: 400 });
+    }
+
+    const [updatedMeeting] = await db
+      .update(meetings)
+      .set({
+        transcriptUrl: event.call_transcription.url,
+      })
+      .where(eq(meetings.id, meetingId))
+      .returning();
+
+    if (!updatedMeeting) {
+      return NextResponse.json({ error: "未找到会议" }, { status: 404 });
+    }
+
+    // 调用inngest工作流总结通话记录
+    await inngest.send({
+      name: "meetings/processing",
+      data: {
+        meetingId,
+        transcriptUrl: event.call_transcription.url,
+      },
+    });
+  } else if (eventType === "call.recording_ready") {
+    // 当通话录音文件准备好时
+    const event = payload as CallRecordingReadyEvent;
+    const meetingId = event.call_cid.split(":")[1];
+
+    if (!meetingId) {
+      return NextResponse.json({ error: "缺少会议ID参数" }, { status: 400 });
+    }
+
+    const [updatedMeeting] = await db
+      .update(meetings)
+      .set({
+        recordingUrl: event.call_recording.url,
+      })
+      .where(eq(meetings.id, meetingId))
+      .returning();
+
+    if (!updatedMeeting) {
+      return NextResponse.json({ error: "未找到会议" }, { status: 404 });
     }
   }
 

@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 import { ColumnDef } from "@tanstack/react-table";
-import { MeetingGetMany, statusLabelMap } from "../../types";
+import { MeetingGetMany, MeetingStatusLabelMap } from "../../types";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import {
   CircleCheckIcon,
@@ -64,7 +64,9 @@ export const columns: ColumnDef<MeetingGetMany[number]>[] = [
           />
           <span>
             {row.original.startedAt
-              ? format(row.original.startedAt, "MMM d", { locale: zhCN })
+              ? format(row.original.startedAt, "yyyy/M/d", {
+                  locale: zhCN,
+                })
               : ""}
           </span>
         </div>
@@ -91,7 +93,11 @@ export const columns: ColumnDef<MeetingGetMany[number]>[] = [
               row.original.status === "processing" && "animate-spin",
             )}
           />
-          {statusLabelMap[row.original.status as keyof typeof statusLabelMap]}
+          {
+            MeetingStatusLabelMap[
+              row.original.status as keyof typeof MeetingStatusLabelMap
+            ]
+          }
         </Badge>
       );
     },

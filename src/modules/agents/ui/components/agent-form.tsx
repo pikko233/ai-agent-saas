@@ -75,7 +75,7 @@ export const AgentForm = ({
     resolver: zodResolver(agentsInsertSchema),
     defaultValues: {
       name: initialValues?.name ?? "",
-      instructions: initialValues?.instructions ?? "",
+      instructions: initialValues?.instructions ?? "你是一位乐于助人的助手",
     },
   });
 
@@ -116,7 +116,7 @@ export const AgentForm = ({
             <FieldLabel htmlFor="instructions">角色设定</FieldLabel>
             <Textarea
               id="instructions"
-              placeholder="请输入角色设定，例如：你是一位聪明有耐心的数学老师……"
+              placeholder="请输入角色设定，例如：你是一位乐于助人的助手……"
               rows={2}
               className="max-h-40"
               {...field}
