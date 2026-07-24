@@ -6,7 +6,7 @@ import {
   VideoIcon,
 } from "lucide-react";
 
-import { MeetingStatus, statusLabelMap } from "../../types";
+import { MeetingStatus, MeetingStatusLabelMap } from "../../types";
 import { useMeetingsFilters } from "../../hooks/use-meetings-filters";
 import { CommandSelect } from "@/components/command-select";
 
@@ -17,7 +17,7 @@ const options = [
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <ClockArrowUpIcon />
-        {statusLabelMap[MeetingStatus.Upcoming]}
+        {MeetingStatusLabelMap[MeetingStatus.Upcoming]}
       </div>
     ),
   },
@@ -27,7 +27,7 @@ const options = [
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <VideoIcon />
-        {statusLabelMap[MeetingStatus.Active]}
+        {MeetingStatusLabelMap[MeetingStatus.Active]}
       </div>
     ),
   },
@@ -37,7 +37,7 @@ const options = [
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <CircleCheckIcon />
-        {statusLabelMap[MeetingStatus.Completed]}
+        {MeetingStatusLabelMap[MeetingStatus.Completed]}
       </div>
     ),
   },
@@ -47,7 +47,7 @@ const options = [
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <LoaderIcon />
-        {statusLabelMap[MeetingStatus.Processing]}
+        {MeetingStatusLabelMap[MeetingStatus.Processing]}
       </div>
     ),
   },
@@ -57,7 +57,7 @@ const options = [
     children: (
       <div className="flex items-center gap-x-2 capitalize">
         <CircleXIcon />
-        {statusLabelMap[MeetingStatus.Cancelled]}
+        {MeetingStatusLabelMap[MeetingStatus.Cancelled]}
       </div>
     ),
   },

@@ -213,7 +213,7 @@ export const SignUpView = () => {
                 已经拥有账号？
                 <Link
                   href={`/sign-in`}
-                  className="text-black/90 font-bold hover:underline underline-offset-4"
+                  className="text-primary font-bold hover:underline underline-offset-4"
                 >
                   前往登录
                 </Link>

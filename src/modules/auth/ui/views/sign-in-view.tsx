@@ -165,7 +165,7 @@ export const SignInView = () => {
                 没有账号？
                 <Link
                   href={`/sign-up`}
-                  className="text-black/90 font-bold hover:underline underline-offset-4"
+                  className="text-primary font-bold hover:underline underline-offset-4"
                 >
                   注册一个
                 </Link>

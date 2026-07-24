@@ -13,7 +13,8 @@
     "dev:agent": "cd agent-worker && uv run uvicorn main:app --host 127.0.0.1 --port 8787 --reload",
     "stop:agent": "kill-port 8787",
     "restart:agent": "npm run stop:agent && npm run dev:agent",
-    "dev:all": "concurrently \"npm run dev:webhook\" \"npm run restart:agent\" \"npm run dev\""
+    "dev:inngest": "npx inngest-cli@latest dev",
+    "dev:all": "killall ngrok 2>/dev/null; concurrently \"npm run dev:webhook\" \"npm run restart:agent\" \"npm run dev\" \"npm run dev:inngest\""
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -21,6 +22,7 @@
     "@dicebear/collection": "^9.4.2",
     "@dicebear/core": "^9.4.2",
     "@hookform/resolvers": "^5.4.0",
+    "@inngest/agent-kit": "^0.13.2",
     "@neondatabase/serverless": "^1.1.0",
     "@shadcn/react": "^0.2.1",
     "@stream-io/node-sdk": "^0.7.62",
@@ -41,7 +43,9 @@
     "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "^8.6.0",
     "humanize-duration": "^3.34.0",
+    "inngest": "^4.13.0",
     "input-otp": "^1.4.2",
+    "jsonl-parse-stringify": "^1.0.3",
     "lucide-react": "^1.24.0",
     "nanoid": "^6.0.0",
     "next": "16.2.10",
